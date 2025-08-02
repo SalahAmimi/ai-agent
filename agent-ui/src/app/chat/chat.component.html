@@ -1,0 +1,81 @@
+<div class="chatgpt-container p-3" style="max-width: 720px; margin: 0 auto; background: #f4f6fb; min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Messages area -->
+  <div class="chat-history card mb-3 shadow-sm border-0 flex-grow-1" style="overflow-y: auto; background: #fff;">
+    <ng-container *ngIf="messages.length === 0; else showMessages">
+      <div class="chat-message d-flex mb-4 align-items-start">
+        <div class="icon-avatar mx-2 d-flex justify-content-center align-items-center rounded-circle shadow-sm bg-secondary text-white"
+             style="width: 40px; height: 40px; font-size: 1.4rem;">
+          <i class="bi bi-robot"></i>
+        </div>
+        <div class="message-content bg-light rounded px-3 py-2 shadow-sm" style="max-width: 80%; word-break: break-word;">
+          <p>👋 Welcome! Ask me anything or upload a PDF file to get started.</p>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #showMessages>
+      <div *ngFor="let msg of messages" class="chat-message d-flex mb-4 align-items-start" [ngClass]="{'flex-row-reverse': msg.role === 'user'}">
+        <div class="icon-avatar mx-2 d-flex justify-content-center align-items-center rounded-circle shadow-sm"
+             [ngClass]="msg.role === 'user' ? 'bg-primary text-white' : 'bg-secondary text-white'"
+             style="width: 40px; height: 40px; font-size: 1.4rem;">
+          <i [ngClass]="msg.role === 'user' ? 'bi-person' : 'bi-robot'"></i>
+        </div>
+        <div class="message-content" style="max-width: 80%;">
+          <div [ngClass]="{'bg-primary text-white': msg.role === 'user', 'bg-light': msg.role === 'assistant'}"
+               class="rounded px-3 py-2 shadow-sm" style="word-break: break-word;">
+            <ng-container *ngIf="msg.role === 'assistant'; else userText">
+              <markdown [data]="msg.content"></markdown>
+            </ng-container>
+            <ng-template #userText>{{ msg.content }}</ng-template>
+          </div>
+          <div class="text-muted small mt-1" [ngClass]="{'text-end': msg.role === 'user', 'text-start': msg.role === 'assistant'}">
+            {{ msg.timestamp }}
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+    <!-- Spinner while waiting -->
+    <div *ngIf="progress" class="chat-message d-flex mb-4 align-items-start">
+      <div class="icon-avatar mx-2 d-flex justify-content-center align-items-center rounded-circle shadow-sm bg-secondary text-white"
+           style="width: 40px; height: 40px; font-size: 1.4rem;">
+        <i class="bi bi-robot"></i>
+      </div>
+      <div class="message-content" style="max-width: 80%;">
+        <div class="bg-light rounded px-3 py-2 shadow-sm d-inline-flex align-items-center" style="height: 38px;">
+          <div class="spinner-border spinner-border-sm text-secondary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <span class="ms-2 small text-muted">Thinking...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input form -->
+  <form (ngSubmit)="askAgent()" class="bg-white p-3 rounded shadow-sm d-flex align-items-center" style="position: sticky; bottom: 0; z-index: 1;">
+    <!-- File upload -->
+    <div class="position-relative me-2">
+      <input type="file" id="fileInput" (change)="onFileAutoUpload($event)" accept=".pdf"
+             style="opacity: 0; position: absolute; width: 100%; height: 100%; cursor: pointer;" />
+      <button type="button"
+              class="btn btn-outline-secondary rounded-circle d-flex justify-content-center align-items-center"
+              style="width: 44px; height: 44px;" (click)="triggerFileInput()">
+        <i class="bi bi-paperclip"></i>
+      </button>
+    </div>
+
+    <!-- Text input -->
+    <input [(ngModel)]="query" name="query" autocomplete="off" placeholder="Type your message..."
+           class="form-control me-2" style="border-radius: 30px;" type="text" [disabled]="progress">
+
+    <!-- Send button -->
+    <button type="submit" [disabled]="progress || !query"
+            class="btn btn-primary rounded-circle d-flex justify-content-center align-items-center"
+            style="width: 44px; height: 44px;">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </form>
+
+</div>
